@@ -1,0 +1,15 @@
+# build output
+/sudoku
+/dist/
+
+# SQLite databases (dev and any local copy)
+*.db
+*.db-shm
+*.db-wal
+
+# Real configuration. Only .env.example belongs in git.
+.env
+!.env.example
+
+.DS_Store
+.claude/settings.local.json

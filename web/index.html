@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>Sudoku</title>
+  <meta name="theme-color" content="#f6f4ef" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1b1d22" media="(prefers-color-scheme: dark)">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Sudoku">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="{{asset "css/style.css"}}">
+  <!-- The only script tag. Its ?v= hash busts the browser cache on a
+       deploy; the modules it imports are served no-cache (see main.go). -->
+  <script type="module" src="{{asset "js/app.js"}}"></script>
+</head>
+<body>
+  <header class="bar">
+    <button type="button" id="menu-btn" class="icon-btn" aria-label="Menu">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+    <div class="status">
+      <span id="level-label">Sudoku</span>
+      <span id="timer" aria-label="Time">0:00</span>
+    </div>
+    <button type="button" id="pause-btn" class="icon-btn" aria-label="Pause">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6v12M15 6v12"/></svg>
+    </button>
+  </header>
+
+  <div id="update-banner" class="banner" hidden>
+    <span>A new version is available.</span>
+    <button type="button" id="reload-btn">Reload</button>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <main>
+    <div class="board-wrap">
+      <!-- 81 cells, built by app.js. One tab stop; arrow keys move within. -->
+      <div id="grid" class="grid" role="grid" aria-label="Sudoku grid"></div>
+      <div id="paused" class="paused" hidden>
+        <p>Paused</p>
+        <button type="button" id="resume-btn" class="primary">Resume</button>
+      </div>
+      <div id="empty" class="paused" hidden>
+        <p id="empty-text">Choose a level to start.</p>
+        <button type="button" id="empty-new-btn" class="primary">New game</button>
+      </div>
+    </div>
+
+    <div class="tools" role="toolbar" aria-label="Tools">
+      <button type="button" id="undo-btn" class="tool">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
+        <span>Undo</span>
+      </button>
+      <button type="button" id="erase-btn" class="tool">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 20H8l-4-4 10-10 6 6-6 6"/><path d="m9 11 6 6"/></svg>
+        <span>Erase</span>
+      </button>
+      <button type="button" id="notes-btn" class="tool" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/></svg>
+        <span>Notes</span>
+      </button>
+      <button type="button" id="hint-btn" class="tool">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg>
+        <span>Hint</span>
+      </button>
+      <button type="button" id="check-btn" class="tool">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg>
+        <span>Check</span>
+      </button>
+    </div>
+
+    <section id="hint-panel" class="hint-panel" hidden aria-live="polite">
+      <div class="hint-head">
+        <h2 id="hint-title">Hint</h2>
+        <button type="button" id="hint-close" class="icon-btn" aria-label="Close hint">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+      <ol id="hint-steps"></ol>
+    </section>
+
+    <div id="pad" class="pad" aria-label="Number pad"></div>
+  </main>
+
+  <!-- Menu -->
+  <dialog id="menu-dlg" closedby="any" aria-labelledby="menu-title">
+    <h2 id="menu-title">Menu</h2>
+    <nav class="menu">
+      <button type="button" data-open="new-dlg">New game</button>
+      <button type="button" data-open="stats-dlg">Statistics</button>
+      <button type="button" data-open="settings-dlg">Settings</button>
+      <button type="button" data-open="account-dlg">Account</button>
+    </nav>
+    <p id="menu-account" class="muted"></p>
+    <form method="dialog"><button class="secondary">Close</button></form>
+  </dialog>
+
+  <!-- New game -->
+  <dialog id="new-dlg" closedby="any" aria-labelledby="new-title">
+    <h2 id="new-title">New game</h2>
+    <div class="levels">
+      <button type="button" data-level="easy">Easy<small>Singles only</small></button>
+      <button type="button" data-level="medium">Medium<small>Pairs, triples, pointing</small></button>
+      <button type="button" data-level="hard">Hard<small>X-Wing, Swordfish, XY-Wing</small></button>
+      <button type="button" data-level="expert">Expert<small>XYZ-Wing, colouring</small></button>
+    </div>
+    <div id="resume-section" hidden>
+      <h3>Unfinished games</h3>
+      <ul id="resume-list" class="resume-list"></ul>
+    </div>
+    <form method="dialog"><button class="secondary">Cancel</button></form>
+  </dialog>
+
+  <!-- Statistics -->
+  <dialog id="stats-dlg" closedby="any" aria-labelledby="stats-title">
+    <h2 id="stats-title">Statistics</h2>
+    <table class="stats">
+      <thead><tr><th scope="col">Level</th><th scope="col">Solved</th><th scope="col">Best</th><th scope="col">Average</th></tr></thead>
+      <tbody id="stats-body"></tbody>
+    </table>
+    <p class="muted">Times count only games solved without hints.</p>
+    <form method="dialog"><button class="secondary">Close</button></form>
+  </dialog>
+
+  <!-- Settings -->
+  <dialog id="settings-dlg" closedby="any" aria-labelledby="settings-title">
+    <h2 id="settings-title">Settings</h2>
+    <label class="switch"><input type="checkbox" id="set-mistakes">
+      <span>Show mistakes as you play<small>Off: wrong digits show only when you press <b>Check</b>.</small></span></label>
+    <label class="switch"><input type="checkbox" id="set-same">
+      <span>Highlight matching digits</span></label>
+    <label class="switch"><input type="checkbox" id="set-autonotes">
+      <span>Remove notes automatically<small>Placing a digit clears it from notes in the same row, column, and box.</small></span></label>
+    <form method="dialog"><button class="secondary">Done</button></form>
+  </dialog>
+
+  <!-- Account -->
+  <dialog id="account-dlg" closedby="any" aria-labelledby="account-title">
+    <h2 id="account-title">Account</h2>
+    <div id="acct-guest">
+      <p>To keep your games in step across devices, sign in. Accounts are by invitation.</p>
+      <form id="email-form" class="stack">
+        <label for="email-input">Email address</label>
+        <input type="email" id="email-input" autocomplete="email" required>
+        <button class="primary">Send code</button>
+      </form>
+      <form id="code-form" class="stack" hidden>
+        <p id="code-sent"></p>
+        <label for="code-input">Six-digit code</label>
+        <input type="text" id="code-input" inputmode="numeric" autocomplete="one-time-code"
+               pattern="[0-9]{6}" maxlength="6" required>
+        <button class="primary">Sign in</button>
+        <button type="button" id="code-back" class="secondary">Use a different address</button>
+      </form>
+      <p id="acct-error" class="error" role="alert"></p>
+    </div>
+    <div id="acct-user" hidden>
+      <p>Signed in as <strong id="acct-email"></strong>.</p>
+      <p id="acct-sync" class="muted"></p>
+      <button type="button" id="signout-btn" class="secondary">Sign out</button>
+    </div>
+    <form method="dialog"><button class="secondary">Close</button></form>
+  </dialog>
+
+  <!-- Solved -->
+  <dialog id="win-dlg" aria-labelledby="win-title">
+    <h2 id="win-title">Solved</h2>
+    <p id="win-text"></p>
+    <form method="dialog" class="row">
+      <button value="new" class="primary">New game</button>
+      <button value="close" class="secondary">Close</button>
+    </form>
+  </dialog>
+</body>
+</html>

@@ -1,0 +1,14 @@
+# Keep the build context small, and keep secrets and local data out of the
+# image: anything in a layer is there for good.
+.git
+.gitignore
+.dockerignore
+.claude/
+.env
+*.db
+*.db-shm
+*.db-wal
+sudoku
+dist/
+*.md
+.DS_Store

@@ -1,0 +1,32 @@
+# Nginx Proxy Manager terminates TLS and proxies to sudoku:8080 on the
+# shared blobbyboo network. No published ports: the proxy is the only way in.
+#
+# Accounts are invite-only. To manage them, run the binary in the container:
+#
+#   docker compose exec sudoku /app/sudoku -invite player@example.com
+#   docker compose exec sudoku /app/sudoku -users
+#   docker compose exec sudoku /app/sudoku -revoke player@example.com
+
+name: sudoku
+
+services:
+  sudoku:
+    build: .
+    container_name: sudoku
+    restart: unless-stopped
+    # SMTP settings for sign-in codes (see .env.example). Without them the
+    # server logs codes instead of sending them.
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - sudoku-data:/data
+    networks:
+      - blobbyboo
+
+volumes:
+  sudoku-data:
+
+networks:
+  blobbyboo:
+    external: true
