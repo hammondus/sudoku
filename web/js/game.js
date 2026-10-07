@@ -138,6 +138,20 @@ export function wrongCells(g) {
   return out;
 }
 
+/**
+ * Cells whose digit repeats in their row, column, or box. Both cells of a
+ * pair are included, givens too: the rules alone show the clash, so it
+ * isn't a hint about which digit is wrong.
+ */
+export function clashCells(g) {
+  const out = new Set();
+  for (let c = 0; c < 81; c++) {
+    const v = g.entries[c];
+    if (v && peers[c].some((p) => g.entries[p] === v)) out.add(c);
+  }
+  return out;
+}
+
 export function isSolved(g) {
   return g.entries.every((v, c) => v === solutionAt(g, c));
 }

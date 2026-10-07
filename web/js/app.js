@@ -134,6 +134,9 @@ function render() {
   const sel = state.sel;
   const selDigit = g.entries[sel];
   const wrong = new Set(state.settings.showMistakes ? G.wrongCells(g) : (state.checked ?? []));
+  // Repeated digits break the rules where anyone can see them, so they show
+  // whatever the mistakes setting says.
+  const clash = G.clashCells(g);
   const { out: hintCls, elims } = hintClasses();
 
   for (let c = 0; c < 81; c++) {
@@ -146,6 +149,7 @@ function render() {
     k.toggle("peer", c !== sel && G.peers[sel].includes(c));
     k.toggle("same", state.settings.highlightSame && selDigit !== 0 && v === selDigit && c !== sel);
     k.toggle("wrong", wrong.has(c) || hintCls.get(c) === "wrong");
+    k.toggle("clash", clash.has(c));
     for (const h of ["hint-a", "hint-b", "hint-elim", "hint-target", "hint-unit"]) k.toggle(h, hintCls.get(c) === h);
 
     if (v) {
@@ -173,6 +177,7 @@ function render() {
       label += `, notes ${ds.join(" ")}`;
     }
     if (wrong.has(c)) label += ", wrong";
+    if (clash.has(c)) label += ", repeated in its row, column, or box";
     el.setAttribute("aria-label", label);
   }
 }

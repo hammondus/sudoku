@@ -87,6 +87,17 @@ A hint never fills a cell; it explains the technique. If the board has a
 wrong digit, the hint reports the mistake instead, because a deduction from a
 wrong board would be wrong too.
 
+## Repeated digits are flagged whatever the mistakes setting says
+
+The **Show mistakes as you play** setting controls whether a digit that
+disagrees with the solution shows in red. A digit that repeats in its row,
+column, or box is different: it breaks the rules where the player can see
+it, so the grid flags it always. Every cell in the clash is flagged,
+givens included, so the flag says "these conflict", not "this one is
+wrong", and doesn't reveal the solution.
+
+The flag is red and underlined, so it doesn't depend on colour alone.
+
 ## Sign-in by emailed code, invite-only
 
 - **Code, not link.** On iOS a link in Mail opens Safari, not the installed

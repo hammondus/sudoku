@@ -186,6 +186,13 @@ main {
 .cell.same { background: var(--same); }
 .cell.selected { background: var(--sel); }
 .grid:focus-within .cell.selected { box-shadow: inset 0 0 0 2px var(--accent); }
+/* A repeated digit: red, and underlined so the cue doesn't rely on colour
+   alone. After .given, so a given in a clash turns red too. */
+.cell.clash {
+  color: var(--wrong);
+  text-decoration: underline 2px;
+  text-underline-offset: 4px;
+}
 .cell.wrong { color: var(--wrong); background: var(--wrong-bg); }
 
 .cell.hint-a { background: var(--hint-a); }
